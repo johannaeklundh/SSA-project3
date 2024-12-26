@@ -20,13 +20,17 @@ contract Person {
   uint state_subsidy;
 
 
-  constructor(address ma, address fa) {
+  constructor() payable { // added payable since it is meant to recieve ether?
     age = 0;
     isMarried = false;
-    mother = ma;
-    father = fa;
-    mother = 0x0000000000000000000000000000000000000001;
-    father = 0x0000000000000000000000000000000000000002;
+    // mother = ma; // was here from the beginning
+    // father = fa;
+    // require(mother != address(0), "Mother address cannot be zero"); // Kanske inte behövs
+    // require(father != address(0), "Father address cannot be zero");
+    // mother = 0x0000000000000000000000000000000000000001;
+    // father = 0x0000000000000000000000000000000000000002;
+    mother = address(1); // Explicitly set to avoid issues
+    father = address(2);
     spouse = address(0);
     state_subsidy = DEFAULT_SUBSIDY;
   } 

@@ -1,5 +1,0 @@
-test: ./Person.sol
-contract: Person
-constructor_arguments:
-  - "0x0000000000000000000000000000000000000001" # Example address for 'ma'
-  - "0x0000000000000000000000000000000000000002" # Example address for 'fa'
