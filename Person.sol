@@ -25,6 +25,8 @@ contract Person {
     isMarried = false;
     mother = ma;
     father = fa;
+    mother = 0x0000000000000000000000000000000000000001;
+    father = 0x0000000000000000000000000000000000000002;
     spouse = address(0);
     state_subsidy = DEFAULT_SUBSIDY;
   } 
@@ -57,9 +59,14 @@ contract Person {
   function setSpouse(address sp) public {
     spouse = sp;
   }
-  function getSpouse() public returns (address) {
+  function getSpouse() public view returns (address) {
     return spouse;
   }
+// missing function from the beginning
+  function setSpouseAndMarriageStatus(address _spouse, bool _status) public {
+    spouse = _spouse;
+    isMarried = _status;
+}
   // Echidna invariant to check mutual marriage relationship
   function echidna_test_mutual_marriage() public view returns (bool) {
     if (spouse != address(0)) {
