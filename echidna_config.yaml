@@ -1,0 +1,8 @@
+# export PATH=$PATH:/mnt/c/Users/Asus/       To be able to run the echidna test from all directories
+# config:
+contract: Person
+src: /mnt/c/Users/Asus/Desktop/Utlandsstudier/Kurser/Security/SSA_project3/SSA-project3/Person.sol
+constructor_args:
+  - "0x0000000000000000000000000000000000000001"
+  - "0x0000000000000000000000000000000000000002"
+gas_limit: 2000000

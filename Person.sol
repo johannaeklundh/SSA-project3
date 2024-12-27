@@ -2,34 +2,25 @@ pragma solidity ^0.8.22;
 // SPDX-License-Identifier: UNLICENSED
 
 contract Person {
-
-  uint age; 
-
-  bool isMarried; 
-
+  uint public age; 
+  bool public isMarried; 
   /* Reference to spouse if person is married, address(0) otherwise */
-  address spouse; 
-
-
-  address  mother; 
-  address  father; 
-
-  uint constant  DEFAULT_SUBSIDY = 500;
-
+  address public spouse; 
+  address public mother; 
+  address public father; 
+  uint constant DEFAULT_SUBSIDY = 1; // Decreasing for testing
   /* welfare subsidy */
-  uint state_subsidy;
+  uint public state_subsidy;
 
+  // uint constant  DEFAULT_SUBSIDY = 500;
 
-  constructor() payable { // added payable since it is meant to recieve ether?
+  // constructor(address ma, address fa) payable { // added payable since it is meant to recieve ether?
+  constructor() payable {
     age = 0;
     isMarried = false;
     // mother = ma; // was here from the beginning
     // father = fa;
-    // require(mother != address(0), "Mother address cannot be zero"); // Kanske inte behövs
-    // require(father != address(0), "Father address cannot be zero");
-    // mother = 0x0000000000000000000000000000000000000001;
-    // father = 0x0000000000000000000000000000000000000002;
-    mother = address(1); // Explicitly set to avoid issues
+    mother = address(1); // Explicitly set to avoid issues  //Commented out for simplicity in testing
     father = address(2);
     spouse = address(0);
     state_subsidy = DEFAULT_SUBSIDY;
@@ -39,19 +30,22 @@ contract Person {
   //We require new_spouse != address(0);
   function marry(address new_spouse) public {
     require(new_spouse != address(0), "Spouse address cannot be zero");
-    Person sp = Person(new_spouse);      
+    require(new_spouse != address(this), "Cannot marry yourself"); // added
+    require(spouse == address(0), "Already married"); 
+    
+    Person sp = Person(new_spouse);     
+    require(sp.spouse() == address(0), " New spouse is already married"); 
     // Update mutual relationship
-    sp.setSpouseAndMarriageStatus(address(this), true);
-    spouse = new_spouse;
-    isMarried = true;
+    setSpouseAndMarriageStatus(new_spouse, true);
+    setSpouseAndMarriageStatus(address(this), true);
   }
   
   function divorce() public {
     require(spouse != address(0), "No spouse to divorce");
-    Person sp = Person(address(spouse));
+    // Person sp = Person(address(spouse));
     
     // Nullify mutual relationship
-    sp.setSpouseAndMarriageStatus(address(0), false);
+    setSpouseAndMarriageStatus(address(0), false);
     spouse = address(0);
     isMarried = false;
   }
@@ -60,14 +54,23 @@ contract Person {
     age++;
   }
 
-  function setSpouse(address sp) public {
-    spouse = sp;
-  }
-  function getSpouse() public view returns (address) {
-    return spouse;
-  }
+  // function setSpouse(address sp) public {
+  //   require(sp != address(0), "Spouse address cannot be zero");
+  //   require(sp != address(this), "Cannot marry yourself");
+  //   // Ensure mutual marriage
+  //   Person newSpouseContract = Person(sp);
+  //   require(newSpouseContract.spouse() == address(0), "New spouse is already married");
+  //   // Set spouse references for both parties
+  //   spouse = sp;
+  //   newSpouseContract.setSpouse(address(this));
+  // }
+  
+  // function getSpouse() public view returns (address) {
+  //   return spouse;
+  // }
+
 // missing function from the beginning
-  function setSpouseAndMarriageStatus(address _spouse, bool _status) public {
+  function setSpouseAndMarriageStatus(address _spouse, bool _status) internal {
     spouse = _spouse;
     isMarried = _status;
 }
@@ -75,7 +78,7 @@ contract Person {
   function echidna_test_mutual_marriage() public view returns (bool) {
     if (spouse != address(0)) {
       Person sp = Person(spouse);
-      return sp.getSpouse() == address(this);
+      return sp.spouse() == address(this);
     }
     return true; // No spouse, invariant holds
   }
