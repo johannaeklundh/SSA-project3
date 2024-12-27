@@ -82,4 +82,18 @@ contract Person {
     }
     return true; // No spouse, invariant holds
   }
+
+  function echidna_test_valid_age() public view returns (bool) {
+    return age >= 0 && age < 150; // Replace 150 with your desired upper limit
+  }
+
+  function echidna_test_no_self_marriage() public view returns (bool) {
+    return spouse != address(this);
+  }
+
+  function echidna_test_is_married_consistent() public view returns (bool) {
+    return !isMarried || spouse != address(0);
+  }
+
+
 }
