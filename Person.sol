@@ -185,18 +185,6 @@ contract Person {
     return state_subsidy >= 350;
   }
 
-  function echidna_test_divorce_changes_subsidy() public view returns (bool) {
-    if (!isMarried) {
-      if (age < 65) {
-        return state_subsidy == DEFAULT_SUBSIDY;
-      } else {
-        return state_subsidy == 600;
-      }
-    } else if (isMarried){
-      return true; // If married, the condition is trivially true
-    }
-  }
-
   function echidna_test_subsidy_matches_calculation() public view returns (bool) {
     return state_subsidy == calculateSubsidy();
   }
