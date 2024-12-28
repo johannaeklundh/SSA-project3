@@ -51,8 +51,8 @@ contract Person {
     Person sp = Person(address(spouse));
     
     // Nullify mutual relationship
-    spouse = address(0);
-    isMarried = false;
+    setSpouse(address(0));
+    setMarriageStatus(false);
     sp.setSpouse(address(0));
     sp.setMarriageStatus(false);
   }
@@ -113,13 +113,16 @@ contract Person {
 
   // checks that divorce is mutual
   function echidna_test_mutual_divorce() public view returns (bool) {
-    if (spouse != address(0)) {
-        // Check that if a person has a spouse, the spouse's spouse matches this person
+    if (spouse == address(0)) {
+        // If divorced, ensure the spouse's contract reflects the same
+        return true; // No spouse, invariant holds
+    } else {
+        // If married, ensure the spouse's spouse points back to this contract
         Person spouseContract = Person(spouse);
         return spouseContract.getSpouse() == address(this);
     }
-    return true; // If not married, condition holds
-  }
+}
+
 
   // Check the age is in a valid range
   function echidna_test_valid_age() public view returns (bool) {
@@ -140,6 +143,6 @@ contract Person {
         return (mother != spouseContract.getMother() && father != spouseContract.getFather());
     }
     return true; // Not married, condition holds
-}
+  }
 
 }
