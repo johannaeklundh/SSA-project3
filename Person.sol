@@ -18,8 +18,7 @@ contract Person {
     isMarried = false;
     // mother = ma; // was here from the beginning
     // father = fa;
-    mother = address(1); // Explicitly set to avoid issues  //Commented out for simplicity in testing
-    father = address(2);
+    mother = address(1); // Explicitly set to avoid issues 
     spouse = address(0);
     state_subsidy = DEFAULT_SUBSIDY;
   } 
@@ -33,12 +32,12 @@ contract Person {
     
     Person sp = Person(new_spouse);     
     require(sp.getSpouse() == address(0), " New spouse is already married"); 
+    
     // Update mutual relationship
     setSpouse(new_spouse);
     setMarriageStatus(true);
-
-    sp.updateSpouse(address(this));
-    sp.updateMarriageStatus(true); // BEHÖVER FIXA
+    sp.setSpouse(address(this));
+    sp.setMarriageStatus(true);
   }
   
   function divorce() public {
@@ -48,9 +47,8 @@ contract Person {
     // Nullify mutual relationship
     spouse = address(0);
     isMarried = false;
-
-    sp.updateSpouse(address(0));
-    sp.updateMarriageStatus(false);
+    sp.setSpouse(address(0));
+    sp.setMarriageStatus(false);
   }
 
   function haveBirthday() public {
@@ -61,25 +59,21 @@ contract Person {
     return spouse;
   }
 
-  function setSpouse(address sp) internal {
+  function setSpouse(address sp) public {
+    Person new_sp = Person(address(sp));
+    require(sp != address(0), "Spouse address cannot be zero");
+    require(sp != address(this), "Cannot marry yourself");
+    require(new_sp.getSpouse() == address(this), "Unauthorized caller"); // the spouse's spouse matches this person
     spouse = sp;
-  }
-  function updateSpouse(address sp) external {
-    require(msg.sender == spouse, "Unauthorized caller"); // can onnly be called by the spouse
-    setSpouse(sp); // Calls the internal function
-  }
+  } 
 
-  function setMarriageStatus(bool marriage) internal{
-    if (marriage){
-      require(spouse != address(0), "You have no spouse, you cannot marry");
+  function setMarriageStatus(bool marriage) public{
+    if (marriage) {
+      require(getSpouse() != address(0), "Already have a spouse");
     } else {
-      require(spouse == address(0), "You have a spouce, cant divorce");
+      require(getSpouse() == address(0), "Does not have a spouse");
     }
     isMarried = marriage;
-  }
-  function updateMarriageStatus(bool marriage) public {
-    require(msg.sender == spouse, "Unauthorized caller");
-    setMarriageStatus(marriage);
   }
 
 
