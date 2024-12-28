@@ -16,8 +16,10 @@ contract Person {
   constructor() payable {
     age = 0;
     isMarried = false;
+    // TODO: see that it works with the original constructor
     // mother = ma; // was here from the beginning
     // father = fa;
+    father = address(2);
     mother = address(1); // Explicitly set to avoid issues 
     spouse = address(0);
     state_subsidy = DEFAULT_SUBSIDY;
@@ -32,6 +34,10 @@ contract Person {
     
     Person sp = Person(new_spouse);     
     require(sp.getSpouse() == address(0), " New spouse is already married"); 
+
+    // Ensure the new spouse is not a sibling
+    require(mother != sp.getMother(), "Cannot marry a sibling (same mother)");
+    require(father != sp.getFather(), "Cannot marry a sibling (same father)");
     
     // Update mutual relationship
     setSpouse(new_spouse);
@@ -57,6 +63,13 @@ contract Person {
 
   function getSpouse() public view returns (address) {
     return spouse;
+  } 
+
+  function getMother() public view returns (address){
+    return mother;
+  }
+  function getFather() public view returns (address){
+    return father;
   }
 
   function setSpouse(address sp) public {
@@ -120,5 +133,13 @@ contract Person {
     }
     return true; // If not married, condition holds
     }
+
+  function echidna_test_no_sibling_marriage() public view returns (bool) {
+    if (spouse != address(0)) {
+        Person spouseContract = Person(spouse);
+        return (mother != spouseContract.getMother() && father != spouseContract.getFather());
+    }
+    return true; // Not married, condition holds
+}
 
 }
