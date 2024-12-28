@@ -43,27 +43,33 @@ contract Person {
     setMarriageStatus(true);
     sp.setSpouse(address(this));
     sp.setMarriageStatus(true);
+
+    updateSubsidy();
+    sp.updateSubsidy();
   }
   
   function divorce() public {
     require(spouse != address(0), "No spouse to divorce");
     Person sp = Person(address(spouse));
     
-    // Nullify mutual relationship
+    // Remove mutual relationship
     setSpouse(address(0));
     setMarriageStatus(false);
     sp.setSpouse(address(0));
     sp.setMarriageStatus(false);
+
+    updateSubsidy();
+    sp.updateSubsidy();
   }
 
   function haveBirthday() public {
     age++;
+    updateSubsidy(); // Recalculate subsidy based on new age
   }
 
   function getSpouse() public view returns (address) {
     return spouse;
   } 
-
   function getMother() public view returns (address){
     return mother;
   }
@@ -88,6 +94,21 @@ contract Person {
     isMarried = marriage;
   }
 
+  function calculateSubsidy() public view returns (uint) {
+    if(isMarried){
+      return (DEFAULT_SUBSIDY * 70) / 100 + 53; // Have on purposed written the wring this, does not result in a failed test...
+    } else if(age > 65){
+      return DEFAULT_SUBSIDY + 100; // Increased subsidy for unmarried persons over 65
+    } else {
+      return DEFAULT_SUBSIDY; // Unmarried people under 65 get the default subsidy
+    }
+  }
+
+  function updateSubsidy() public {
+    state_subsidy = calculateSubsidy();
+  }
+
+
 
 // Echidna invariants
 
@@ -96,8 +117,9 @@ contract Person {
     if (spouse != address(0)) {
       Person sp = Person(spouse);
       return sp.getSpouse() == address(this);
+    } else if (spouse == address(0)) {
+      return true; // No spouse, invariant holds
     }
-    return true; // No spouse, invariant holds
   }
 
   // Test that the person is not marrying it self
@@ -110,18 +132,6 @@ contract Person {
     return !isMarried || spouse != address(0);
   }
 
-  // checks that divorce is mutual
-  function echidna_test_mutual_divorce() public view returns (bool) {
-    if (spouse == address(0)) {
-        // If divorced, ensure the spouse's contract reflects the same
-        return true; // No spouse, invariant holds
-    } else {
-        // If married, ensure the spouse's spouse points back to this contract
-        Person spouseContract = Person(spouse);
-        return spouseContract.getSpouse() == address(this);
-    }
-}
-
   // Check the age is in a valid range
   function echidna_test_valid_age() public view returns (bool) {
     return age >= 0 && age < 150;
@@ -130,17 +140,65 @@ contract Person {
   // Ensure marriage only occurs if age >= 18
   function echidna_test_marriage_age() public view returns (bool) {
     if (isMarried) {
-        return age >= 18;
-    }
-    return true; // If not married, condition holds
-    }
+      return age >= 18;
+    } else if (!isMarried){
+      return true; // If not married, condition holds
+    } 
+  }
 
   function echidna_test_no_sibling_marriage() public view returns (bool) {
     if (spouse != address(0)) {
-        Person spouseContract = Person(spouse);
-        return (mother != spouseContract.getMother() && father != spouseContract.getFather());
+      Person spouseContract = Person(spouse);
+      return (mother != spouseContract.getMother() && father != spouseContract.getFather());
+    } else if( spouse == address(0)){
+      return true; // Not married, condition holds
     }
-    return true; // Not married, condition holds
+  }
+
+  function echidna_test_subsidy_consistency() public view returns (bool) {
+    uint expectedSubsidy;
+    if (isMarried) {
+        expectedSubsidy =(DEFAULT_SUBSIDY * 70) / 100;
+    } else {
+        expectedSubsidy = (age < 65) ? DEFAULT_SUBSIDY : 600;
+    }
+    return state_subsidy == expectedSubsidy;
+  }
+
+  function echidna_test_subsidy_at_age_65() public view returns (bool) {
+    if (age == 65) {
+      if (!isMarried) {
+        return state_subsidy == 600;
+      } else {
+        return state_subsidy == (DEFAULT_SUBSIDY * 70) / 100;
+      }
+    } else if (age != 65){
+      return true; // Skip other ages
+    }
+  }
+
+  function echidna_test_subsidy_never_exceeds_max() public view returns (bool) {
+    return state_subsidy <= 600;
+  }
+
+  function echidna_test_subsidy_never_below_min() public view returns (bool) {
+    return state_subsidy >= 350;
+  }
+
+  function echidna_test_divorce_changes_subsidy() public view returns (bool) {
+    if (!isMarried) {
+      if (age < 65) {
+        return state_subsidy == DEFAULT_SUBSIDY;
+      } else {
+        return state_subsidy == 600;
+      }
+    } else if (isMarried){
+      return true; // If married, the condition is trivially true
+    }
+  }
+
+  function echidna_test_subsidy_matches_calculation() public view returns (bool) {
+    return state_subsidy == calculateSubsidy();
   }
 
 }
