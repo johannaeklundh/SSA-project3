@@ -25,10 +25,9 @@ contract Person {
     state_subsidy = DEFAULT_SUBSIDY;
   } 
 
-  //We require new_spouse != address(0);
   function marry(address new_spouse) public {
     require(new_spouse != address(0), "Spouse address cannot be zero");
-    require(new_spouse != address(this), "Cannot marry yourself"); // added
+    require(new_spouse != address(this), "Cannot marry yourself");
     require(spouse == address(0), "Already married"); 
     require(age >= 18, "Cannot marry before age 18");
     
@@ -82,9 +81,9 @@ contract Person {
 
   function setMarriageStatus(bool marriage) public{
     if (marriage) {
-      require(getSpouse() != address(0), "Already have a spouse");
+      require(getSpouse() != address(0), "Does not have a spouse");
     } else {
-      require(getSpouse() == address(0), "Does not have a spouse");
+      require(getSpouse() == address(0), "Already have a spouse");
     }
     isMarried = marriage;
   }
@@ -122,7 +121,6 @@ contract Person {
         return spouseContract.getSpouse() == address(this);
     }
 }
-
 
   // Check the age is in a valid range
   function echidna_test_valid_age() public view returns (bool) {
